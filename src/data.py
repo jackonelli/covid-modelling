@@ -17,6 +17,14 @@ class IcuCases():
         day_diff = self.dates - self.dates[0]
         return np.array([int(x / np.timedelta64(1, 'D')) for x in day_diff])
 
+    def filter_dates(self, date_filter):
+        """Filter on date condition.
+        Return a subset of dates and cases
+        based on some filter of the dates
+        """
+        inds = date_filter(self.dates)
+        return (self.dates[inds], self.cases[inds])
+
     @staticmethod
     def from_excel(excelfile: Union[Path, str]) -> "IcuCases":
         """Init from excel file"""
@@ -41,3 +49,17 @@ def _df_from_xls(excelfile: Union[Path, str]) -> pd.DataFrame:
 
 def _parse_date(date: str) -> dt.date:
     return dt.datetime.strptime(date, "%Y-%m-%d").date()
+
+
+def after_date(date: dt.date):
+    return lambda input_: input_ > date
+
+
+def extend_date_range(dates: np.ndarray, desired_length: int):
+    """Extrapolate a daterange based on """
+    last_date = dates[-1]
+    extended_dates = np.array([
+        last_date + np.timedelta64(i, "D")
+        for i in np.arange(1, desired_length - len(dates) + 1)
+    ])
+    return np.append(dates, extended_dates)
